@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -97,6 +97,7 @@ namespace Ice
         private SpriteFont smallText, mediumText, largeText;
         private KeyboardState keyboardState;
         private MouseState mouseState;
+        private Point virtualMousePosition;
         private int frameCounter, fps, buttonHeight, titleHeight, howToPlayHeight;
         private string configFilePath, fpsText, positionXText, positionYText, velocityXText, velocityYText, particleCountText, timeToCompleteText, fastestTimeText, gameFinishedText;
         private bool canContinue, canEscape, showDebugText, showFPS;
@@ -184,13 +185,13 @@ namespace Ice
         // Uppdaterar positionerna för alla knappar beroende på skärmstorlek
         private void UpdateButtonPositions()
         {
-            Vector2 playPosition = new Vector2((_graphicsDevice.Viewport.Width - playButton.Width) * 0.5f, 600);
+            Vector2 playPosition = new Vector2((Game1.VirtualWidth - playButton.Width) * 0.5f, 600);
             playButton.SetPosition(playPosition);
 
-            Vector2 playAgainPosition = new Vector2((_graphicsDevice.Viewport.Width - playAgainButton.Width) * 0.5f, (_graphicsDevice.Viewport.Height - playAgainButton.Height) * 0.5f);
+            Vector2 playAgainPosition = new Vector2((Game1.VirtualWidth - playAgainButton.Width) * 0.5f, (Game1.VirtualHeight - playAgainButton.Height) * 0.5f);
             playAgainButton.SetPosition(playAgainPosition);
 
-            Vector2 settingsPosition = new Vector2((_graphicsDevice.Viewport.Width - settingsButton.Width) * 0.5f, 740);
+            Vector2 settingsPosition = new Vector2((Game1.VirtualWidth - settingsButton.Width) * 0.5f, 740);
             settingsButton.SetPosition(settingsPosition);
 
             Vector2 backPosition = new Vector2(20, 40);
@@ -208,10 +209,10 @@ namespace Ice
             Vector2 pausePosition = new Vector2(20, 40);
             pauseButton.SetPosition(pausePosition);
 
-            Vector2 mainMenuPosition = new Vector2((_graphicsDevice.Viewport.Width - mainMenuButton.Width) * 0.5f, 720);
+            Vector2 mainMenuPosition = new Vector2((Game1.VirtualWidth - mainMenuButton.Width) * 0.5f, 720);
             mainMenuButton.SetPosition(mainMenuPosition);
 
-            Vector2 howToPlayPosition = new Vector2((_graphicsDevice.Viewport.Width - howToPlayButton.Width) * 0.5f, 880);
+            Vector2 howToPlayPosition = new Vector2((Game1.VirtualWidth - howToPlayButton.Width) * 0.5f, 880);
             howToPlayButton.SetPosition(howToPlayPosition);
         }
 
@@ -336,7 +337,7 @@ namespace Ice
         {
             if (mouseState.LeftButton == ButtonState.Pressed)
             {
-                if (button.ButtonRect.Contains(mouseState.Position))
+                if (button.ButtonRect.Contains(virtualMousePosition))
                 {
                     if (!button.MouseDownBeforeContact)
                     {
@@ -361,7 +362,7 @@ namespace Ice
             {
                 if (mouseState.LeftButton == ButtonState.Released)
                 {
-                    if (button.ButtonRect.Contains(mouseState.Position))
+                    if (button.ButtonRect.Contains(virtualMousePosition))
                     {
                         if (onClick != null) onClick();
                     }
@@ -379,15 +380,15 @@ namespace Ice
 
                 if (_levelManager.gamePaused)
                 {
-                    Vector2 playPosition = new Vector2((_graphicsDevice.Viewport.Width - playButton.Width) * 0.5f, 300);
+                    Vector2 playPosition = new Vector2((Game1.VirtualWidth - playButton.Width) * 0.5f, 300);
                     playButton.SetPosition(playPosition);
                     ManageButton(playButton, delegate { _levelManager.gamePaused = false; });
 
-                    Vector2 settingsPosition = new Vector2((_graphicsDevice.Viewport.Width - settingsButton.Width) * 0.5f, 440);
+                    Vector2 settingsPosition = new Vector2((Game1.VirtualWidth - settingsButton.Width) * 0.5f, 440);
                     settingsButton.SetPosition(settingsPosition);
                     ManageButton(settingsButton, delegate { settingsActive = true; });
 
-                    Vector2 howToPlayPosition = new Vector2((_graphicsDevice.Viewport.Width - howToPlayButton.Width) * 0.5f, 580);
+                    Vector2 howToPlayPosition = new Vector2((Game1.VirtualWidth - howToPlayButton.Width) * 0.5f, 580);
                     howToPlayButton.SetPosition(howToPlayPosition);
                     ManageButton(howToPlayButton, delegate { howToPlayActive = true; });
 
@@ -402,15 +403,15 @@ namespace Ice
             {
                 if (!_levelManager.gameStarted && !settingsActive && !howToPlayActive)
                 {
-                    Vector2 playPosition = new Vector2((_graphicsDevice.Viewport.Width - playButton.Width) * 0.5f, 600);
+                    Vector2 playPosition = new Vector2((Game1.VirtualWidth - playButton.Width) * 0.5f, 600);
                     playButton.SetPosition(playPosition);
                     ManageButton(playButton, delegate { _levelManager.gameStarted = true; });
 
-                    Vector2 settingsPosition = new Vector2((_graphicsDevice.Viewport.Width - settingsButton.Width) * 0.5f, 740);
+                    Vector2 settingsPosition = new Vector2((Game1.VirtualWidth - settingsButton.Width) * 0.5f, 740);
                     settingsButton.SetPosition(settingsPosition);
                     ManageButton(settingsButton, delegate { settingsActive = true; });
 
-                    Vector2 howToPlayPosition = new Vector2((_graphicsDevice.Viewport.Width - howToPlayButton.Width) * 0.5f, 880);
+                    Vector2 howToPlayPosition = new Vector2((Game1.VirtualWidth - howToPlayButton.Width) * 0.5f, 880);
                     howToPlayButton.SetPosition(howToPlayPosition);
                     ManageButton(howToPlayButton, delegate { howToPlayActive = true; });
 
@@ -462,6 +463,7 @@ namespace Ice
         {
             keyboardState = Keyboard.GetState();
             mouseState = Mouse.GetState();
+            virtualMousePosition = Game1.ScreenToVirtual(mouseState.Position);
 
             UpdateButtonPositions();
 
@@ -489,11 +491,11 @@ namespace Ice
                 // Ritar debugtext om aktiv
                 if (showDebugText)
                 {
-                    Vector2 posX = new Vector2(10, _graphicsDevice.Viewport.Height - smallText.MeasureString(positionXText).Y - 94);
-                    Vector2 posY = new Vector2(10, _graphicsDevice.Viewport.Height - smallText.MeasureString(positionYText).Y - 76);
-                    Vector2 velX = new Vector2(10, _graphicsDevice.Viewport.Height - smallText.MeasureString(velocityXText).Y - 50);
-                    Vector2 velY = new Vector2(10, _graphicsDevice.Viewport.Height - smallText.MeasureString(velocityYText).Y - 32);
-                    Vector2 particleCount = new Vector2(10, _graphicsDevice.Viewport.Height - smallText.MeasureString(particleCountText).Y - 6);
+                    Vector2 posX = new Vector2(10, Game1.VirtualHeight - smallText.MeasureString(positionXText).Y - 94);
+                    Vector2 posY = new Vector2(10, Game1.VirtualHeight - smallText.MeasureString(positionYText).Y - 76);
+                    Vector2 velX = new Vector2(10, Game1.VirtualHeight - smallText.MeasureString(velocityXText).Y - 50);
+                    Vector2 velY = new Vector2(10, Game1.VirtualHeight - smallText.MeasureString(velocityYText).Y - 32);
+                    Vector2 particleCount = new Vector2(10, Game1.VirtualHeight - smallText.MeasureString(particleCountText).Y - 6);
 
                     _spriteBatch.DrawString(smallText, positionXText, posX, Color.Black);
                     _spriteBatch.DrawString(smallText, positionYText, posY, Color.Black);
@@ -503,17 +505,17 @@ namespace Ice
                 }
 
                 // Ritar tidtagning och snabbaste tid
-                float timeToCompleteX = (_graphicsDevice.Viewport.Width - mediumText.MeasureString(timeToCompleteText).X) * 0.5f;
+                float timeToCompleteX = (Game1.VirtualWidth - mediumText.MeasureString(timeToCompleteText).X) * 0.5f;
                 Vector2 timeToCompletePos = new Vector2(timeToCompleteX, 10);
                 _spriteBatch.DrawString(mediumText, timeToCompleteText, timeToCompletePos, Color.Black);
 
                 float crownScale = 22f / crown.Height;
                 float fastestTimeWidth = mediumText.MeasureString(fastestTimeText).X;
-                float crownX = _graphicsDevice.Viewport.Width - crown.Width * crownScale - fastestTimeWidth - 20;
+                float crownX = Game1.VirtualWidth - crown.Width * crownScale - fastestTimeWidth - 20;
                 float crownY = 12;
                 Vector2 crownPos = new Vector2(crownX, crownY);
 
-                float fastestTimeX = _graphicsDevice.Viewport.Width - fastestTimeWidth - 10;
+                float fastestTimeX = Game1.VirtualWidth - fastestTimeWidth - 10;
                 Vector2 fastestTimePos = new Vector2(fastestTimeX, 10);
 
                 _spriteBatch.Draw(crown, crownPos, null, Color.White, 0f, Vector2.Zero, new Vector2(crownScale), SpriteEffects.None, 0f);
@@ -539,7 +541,7 @@ namespace Ice
                 if (!_levelManager.gameStarted && !settingsActive && !howToPlayActive)
                 {
                     float titleScale = (float)titleHeight / gameTitle.Height;
-                    Vector2 titlePos = new Vector2((_graphicsDevice.Viewport.Width - gameTitle.Width * titleScale) * 0.5f, 200);
+                    Vector2 titlePos = new Vector2((Game1.VirtualWidth - gameTitle.Width * titleScale) * 0.5f, 200);
 
                     _spriteBatch.Draw(gameTitle, titlePos, null, Color.White, 0f, Vector2.Zero, new Vector2(titleScale), SpriteEffects.None, 0f);
 
@@ -553,7 +555,7 @@ namespace Ice
                 if (_levelManager.gameFinished)
                 {
                     _spriteBatch.Draw(playAgainButton.Texture, playAgainButton.Position, null, playAgainButton.ButtonColor, 0f, Vector2.Zero, new Vector2(playAgainButton.Scale), SpriteEffects.None, 0f);
-                    _spriteBatch.DrawString(largeText, gameFinishedText, new Vector2((_graphicsDevice.Viewport.Width - largeText.MeasureString(gameFinishedText).X) * 0.5f, 400), Color.Black);
+                    _spriteBatch.DrawString(largeText, gameFinishedText, new Vector2((Game1.VirtualWidth - largeText.MeasureString(gameFinishedText).X) * 0.5f, 400), Color.Black);
                 }
             }
 
@@ -569,7 +571,7 @@ namespace Ice
             if (howToPlayActive)
             {
                 float howToPlayScale = (float)howToPlayHeight / howToPlay.Height;
-                Vector2 howToPlayPos = new Vector2((_graphicsDevice.Viewport.Width - howToPlay.Width * howToPlayScale) * 0.5f, (_graphicsDevice.Viewport.Height - howToPlay.Height * howToPlayScale) * 0.5f);
+                Vector2 howToPlayPos = new Vector2((Game1.VirtualWidth - howToPlay.Width * howToPlayScale) * 0.5f, (Game1.VirtualHeight - howToPlay.Height * howToPlayScale) * 0.5f);
 
                 _spriteBatch.Draw(howToPlay, howToPlayPos, null, Color.White, 0f, Vector2.Zero, new Vector2(howToPlayScale), SpriteEffects.None, 0f);
 

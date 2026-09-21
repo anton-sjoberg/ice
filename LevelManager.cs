@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -30,6 +30,7 @@ namespace Ice
         private Random random = new Random();
         private bool canSkip; // Om spelaren kan hoppa över nivå
         private int currentLevel; // Index för nuvarande nivå
+        public int CurrentLevel => currentLevel;
 
         // Lista med alla nivåer (varje nivå är en 2D-array av tile-ID:n)
         private List<int[,]> levels = new List<int[,]>
@@ -349,12 +350,12 @@ namespace Ice
 
                 for (int i = _particleManager.snowflakes.Count - 1; i >= 0; i--)
                 {
-                    _particleManager.snowflakes[i].Position.X = random.Next(0, _graphicsDevice.Viewport.Width - _particleManager.snowflakeSize);
+                    _particleManager.snowflakes[i].Position.X = random.Next(0, Game1.VirtualWidth - _particleManager.snowflakeSize);
                 }
 
                 for (int i = _particleManager.snowflakes.Count - 1; i >= 0; i--)
                 {
-                    if (_particleManager.snowflakes[i].Position.Y > _graphicsDevice.Viewport.Height || _particleManager.SnowIntersectsObject(_particleManager.snowflakes[i].Position)) _particleManager.snowflakes.RemoveAt(i);
+                    if (_particleManager.snowflakes[i].Position.Y > Game1.VirtualHeight || _particleManager.SnowIntersectsObject(_particleManager.snowflakes[i].Position)) _particleManager.snowflakes.RemoveAt(i);
                 }
             }
 
@@ -364,7 +365,7 @@ namespace Ice
         // Kollar om spelaren har klarat nivån
         private void CheckForLevelComplete(Vector2 pos)
         {
-            if (pos.X > _graphicsDevice.Viewport.Width - _player.playerSize * 0.5f || (canSkip && keyboardState.IsKeyDown(Keys.R)))
+            if (pos.X > Game1.VirtualWidth - _player.playerSize * 0.5f || (canSkip && keyboardState.IsKeyDown(Keys.R)))
             {
                 canSkip = false;
 

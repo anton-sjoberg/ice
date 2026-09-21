@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
@@ -7,9 +7,15 @@ namespace Ice
 {
     public class Game1 : Game 
     {
+        public const int VirtualWidth = 1920;
+        public const int VirtualHeight = 1080;
+
+        public static Rectangle ViewportDestinationRect { get; private set; }
+
         // Hanterar grafikinställningar och rendering
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private RenderTarget2D _renderTarget;
 
         // Spelkomponenter
         private Player _player;
@@ -22,12 +28,23 @@ namespace Ice
         private float frameTime; // Variabel för att lagra tid mellan frames
         private Song backgroundMusic; // Bakgrundsmusik för spelet
 
+        public static Point ScreenToVirtual(Point screenPoint)
+        {
+            if (ViewportDestinationRect.Width == 0 || ViewportDestinationRect.Height == 0)
+                return screenPoint;
+
+            float scale = (float)ViewportDestinationRect.Width / VirtualWidth;
+            int virtualX = (int)((screenPoint.X - ViewportDestinationRect.X) / scale);
+            int virtualY = (int)((screenPoint.Y - ViewportDestinationRect.Y) / scale);
+            return new Point(virtualX, virtualY);
+        }
+
         // Konstruktor, sätter upp grundläggande grafikinställningar
         public Game1()
         {
             _graphics = new GraphicsDeviceManager(this);
-            _graphics.PreferredBackBufferWidth = 1920; // Skärmupplösning bredd
-            _graphics.PreferredBackBufferHeight = 1080; // Skärmupplösning höjd
+            _graphics.PreferredBackBufferWidth = VirtualWidth; // Skärmupplösning bredd
+            _graphics.PreferredBackBufferHeight = VirtualHeight; // Skärmupplösning höjd
             _graphics.IsFullScreen = true; // Fullskärmsläge
             _graphics.SynchronizeWithVerticalRetrace = false; // VSync av
             IsFixedTimeStep = false; // Ej fast uppdateringsintervall
@@ -45,6 +62,7 @@ namespace Ice
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+            _renderTarget = new RenderTarget2D(GraphicsDevice, VirtualWidth, VirtualHeight);
 
             // Ladda och försöker spela bakgrundsmusik, annars fångar undantag om ingen ljudhårdvara finns
             try
@@ -106,7 +124,25 @@ namespace Ice
         // Renderar allt grafiskt innehåll varje frame
         protected override void Draw(GameTime gameTime)
         {
-            // Lägger bakgrunden till en ljusblå färg
+            int backBufferWidth = GraphicsDevice.PresentationParameters.BackBufferWidth;
+            int backBufferHeight = GraphicsDevice.PresentationParameters.BackBufferHeight;
+
+            float targetAspectRatio = (float)VirtualWidth / VirtualHeight;
+            int width = backBufferWidth;
+            int height = (int)(width / targetAspectRatio + 0.5f);
+
+            if (height > backBufferHeight)
+            {
+                height = backBufferHeight;
+                width = (int)(height * targetAspectRatio + 0.5f);
+            }
+
+            int x = (backBufferWidth - width) / 2;
+            int y = (backBufferHeight - height) / 2;
+            ViewportDestinationRect = new Rectangle(x, y, width, height);
+
+            // Rita spelet till render target i 1920x1080
+            GraphicsDevice.SetRenderTarget(_renderTarget);
             GraphicsDevice.Clear(new Color(0xE5, 0xEF, 0xFF));
 
             // Partiklar och UI ritas alltid, spelare och tilemap ritas endast om spelet är aktivt och inte i inställnings- eller instruktionstillstånd
@@ -114,6 +150,14 @@ namespace Ice
             if (_levelManager.gameActive && !_uiManager.settingsActive && !_uiManager.howToPlayActive) _player.Draw(gameTime);
             if (_levelManager.gameActive && !_uiManager.settingsActive && !_uiManager.howToPlayActive) _tileMap.Draw(gameTime);
             _uiManager.Draw(gameTime);
+
+            // Återställ till backbuffern och rita render target centrerat med letterbox-svarta fält
+            GraphicsDevice.SetRenderTarget(null);
+            GraphicsDevice.Clear(Color.Black);
+
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp);
+            _spriteBatch.Draw(_renderTarget, ViewportDestinationRect, Color.White);
+            _spriteBatch.End();
 
             base.Draw(gameTime);
         }

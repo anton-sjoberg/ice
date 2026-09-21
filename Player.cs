@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -155,15 +155,14 @@ namespace Ice
         }
 
         // Hanterar spelarens död, återställer position och hastighet.
-        private void Die()
+        public void Die()
         {            
-            position = new Vector2(0, _graphicsDevice.Viewport.Height - 1);
+            float startX = (_levelManager != null && _levelManager.CurrentLevel == 0) ? 100 : 0;
+            position = new Vector2(startX, Game1.VirtualHeight - 1);
             velocity = Vector2.Zero;
             averageVelocity = Vector2.Zero;
 
-            while (PlayerIntersectsSolid(position)) position.Y -= 0.1f;
-
-            position.X = 100;
+            while (PlayerIntersectsSolid(position) && position.Y > 0) position.Y -= 0.1f;
         }
 
         // Kollar om spelaren är i kontakt med en bouncer-tile.
@@ -239,7 +238,7 @@ namespace Ice
         }
 
         // Kollar om spelaren är utanför skärmens nedre gräns, dör om så är fallet.
-        private void CheckForOutOfBounds(Vector2 pos) { if (pos.Y > _graphicsDevice.Viewport.Height) Die(); }
+        private void CheckForOutOfBounds(Vector2 pos) { if (pos.Y > Game1.VirtualHeight) Die(); }
 
         // Hanterar spelarens rörelse i X-led.
         private void MovementX()

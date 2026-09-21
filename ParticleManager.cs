@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
@@ -247,7 +247,7 @@ namespace Ice
 
             if (timeSinceLastSnowflake >= 0.1f)
             {
-                snowflakes.Add(new Snowflake(new Vector2(random.Next(0, _graphicsDevice.Viewport.Width - snowflakeSize), -snowflakeSize), 0, 1));
+                snowflakes.Add(new Snowflake(new Vector2(random.Next(0, Game1.VirtualWidth - snowflakeSize), -snowflakeSize), 0, 1));
                 timeSinceLastSnowflake = 0;
             }
         }
@@ -257,7 +257,7 @@ namespace Ice
         {
             for (int i = snowflakes.Count - 1; i >= 0; i--)
             {
-                if (snowflakes[i].Position.Y > _graphicsDevice.Viewport.Height || SnowIntersectsObject(snowflakes[i].Position))
+                if (snowflakes[i].Position.Y > Game1.VirtualHeight || SnowIntersectsObject(snowflakes[i].Position))
                 {
                     if (snowflakes[i].Opacity <= 0) snowflakes.RemoveAt(i);
                     else snowflakes[i].Opacity -= (float)frameTime * 2;
